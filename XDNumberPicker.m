@@ -14,6 +14,7 @@ static float defaultStep= 1.0;
 
 @implementation XDNumberPicker{
     float currentValue;
+    CGPoint controlRects[3];
 }
 
 - (id)initWithFrame:(CGRect)frame{
@@ -25,7 +26,7 @@ static float defaultStep= 1.0;
 {
     self = [super initWithFrame:frame];
     if (self) {
-        self.isVertical= isVertical;
+        _isVertical= isVertical;
         self.minValue= minValue;
         self.maxValue= maxValue;
         self.step= step;
@@ -48,6 +49,12 @@ static float defaultStep= 1.0;
     self.imageMinusPressed= [UIImage imageNamed:@"minus"];
     self.imagePlus= [UIImage imageNamed:@"plus"];
     self.imagePlusPressed= [UIImage imageNamed:@"plus"];
+    
+    if(self.isVertical){
+        self.controlOrder= @"PVM";
+    }else{
+        self.controlOrder= @"MVP";
+    }
     
     /* UI */
     float dim= self.isVertical ? self.bounds.size.width : self.bounds.size.height;
@@ -149,5 +156,62 @@ static float defaultStep= 1.0;
 
 -(void)setImage:(UIImage*)img forButton:(UIButton*)btn state:(UIControlState)state{
     [btn setImage:img forState:state];
+}
+
+#pragma mark - control order
+
+-(void)layoutControls{
+    CGPoint offset= CGPointMake(0, 0);
+    for(int i=0; i<self.controlOrder.length; i++){
+        UIView* view= [self viewForSign:[self.controlOrder characterAtIndex:i]];
+        CGRect frm= view.frame;
+        frm.origin= offset;
+        view.frame= frm;
+        [self addOffset:&offset view:view];
+    }
+}
+
+-(void)setControlOrder:(NSString *)controlOrder{
+    NSString* regexString= @"^(?=[MVP]{3}$)(?!.*(.).*\1).*$";
+
+    NSError *error = NULL;
+    
+    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:regexString options:NSRegularExpressionCaseInsensitive error:&error];
+    NSTextCheckingResult *match = [regex firstMatchInString:controlOrder
+                                                    options:0
+                                                      range:NSMakeRange(0, [controlOrder length])];
+    if (match) {
+        NSLog(@"MATCH %@!",controlOrder);
+    }else{
+        NSLog(@"NO");
+    }
+
+    int count= [regex numberOfMatchesInString:controlOrder options:0 range:NSMakeRange(0, controlOrder.length)];
+    BOOL matchesRegex= count == 1;
+//    NSLog(@"arr %@", arr.description);
+    if(matchesRegex){
+        _controlOrder= controlOrder;
+        [self layoutControls];
+    }
+}
+
+-(void)addOffset:(CGPoint*)point view:(UIView*)view{
+    if(self.isVertical){
+        point->y+= view.frame.size.height;
+    }else{
+        point->x+= view.frame.size.width;
+    }
+}
+
+-(UIView*)viewForSign:(char)ch{
+    NSString* sign= [NSString stringWithFormat:@"%c",ch];
+    if([[sign lowercaseString] isEqualToString:@"m"])
+        return self.buttonMinus;
+    else if([[sign lowercaseString] isEqualToString:@"v"])
+        return self.labelValue;
+    else if([[sign lowercaseString] isEqualToString:@"p"])
+        return self.buttonPlus;
+    else
+        return nil;
 }
 @end
