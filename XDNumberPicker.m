@@ -171,8 +171,9 @@ static float defaultStep= 1.0;
     }
 }
 
--(void)setControlOrder:(NSString *)controlOrder{
-    NSString* regexString= @"^(?=[MVP]{3}$)(?!.*(.).*\1).*$";
+-(void)setControlOrder:(NSString *)co_{
+    NSString* controlOrder= [co_ uppercaseString];
+    NSString* regexString= @"^(?=[MVP]{3}$)(?!.*(.).*\\1).*$";
 
     NSError *error = NULL;
     
@@ -180,19 +181,13 @@ static float defaultStep= 1.0;
     NSTextCheckingResult *match = [regex firstMatchInString:controlOrder
                                                     options:0
                                                       range:NSMakeRange(0, [controlOrder length])];
-    if (match) {
-        NSLog(@"MATCH %@!",controlOrder);
-    }else{
-        NSLog(@"NO");
-    }
+   
+    if(!match)
+        return;
+    
+    _controlOrder= controlOrder;
+    [self layoutControls];
 
-    int count= [regex numberOfMatchesInString:controlOrder options:0 range:NSMakeRange(0, controlOrder.length)];
-    BOOL matchesRegex= count == 1;
-//    NSLog(@"arr %@", arr.description);
-    if(matchesRegex){
-        _controlOrder= controlOrder;
-        [self layoutControls];
-    }
 }
 
 -(void)addOffset:(CGPoint*)point view:(UIView*)view{
