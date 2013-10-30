@@ -11,13 +11,13 @@
 static float defaultMinValue= 1.0;
 static float defaultMaxValue= CGFLOAT_MAX;
 static float defaultStep= 1.0;
-
+static BOOL defaultOrientationIsVertical= NO;
 @implementation XDNumberPicker{
     float currentValue;
 }
 
 - (id)initWithFrame:(CGRect)frame{
-    self= [self initWithFrame:frame initialValue:defaultMinValue minValue:defaultMinValue maxValue:defaultMaxValue step:defaultStep isVertical:NO delegate:nil];
+    self= [self initWithFrame:frame initialValue:defaultMinValue minValue:defaultMinValue maxValue:defaultMaxValue step:defaultStep isVertical:defaultOrientationIsVertical delegate:nil];
     return self;
 }
 
@@ -25,24 +25,25 @@ static float defaultStep= 1.0;
 {
     self = [super initWithFrame:frame];
     if (self) {
-        self.isVertical= isVertical;
-        self.minValue= minValue;
-        self.maxValue= maxValue;
-        self.step= step;
-        self.delegate= delegate;
-        
-        if(initialValue<minValue || initialValue > maxValue){
-            initialValue= minValue;
-        }else{
-            currentValue= initialValue;
-        }
-        
-        [self setup];
+        [self setupWithInitialValue:initialValue minValue:minValue maxValue:maxValue step:step isVertical:isVertical delegate:delegate];
     }
     return self;
 }
 
--(void)setup{
+-(void) setupWithInitialValue:(float)initialValue minValue:(float)minValue maxValue:(float)maxValue step:(float)step isVertical:(BOOL)isVertical delegate:(id<XDNumberPickerDelegate>)delegate{
+    
+    self.isVertical= isVertical;
+    self.minValue= minValue;
+    self.maxValue= maxValue;
+    self.step= step;
+    self.delegate= delegate;
+    
+    if(initialValue<minValue || initialValue > maxValue){
+        initialValue= minValue;
+    }else{
+        currentValue= initialValue;
+    }
+    
     /* Images */
     self.imageMinus= [UIImage imageNamed:@"minus"];
     self.imageMinusPressed= [UIImage imageNamed:@"minus"];
@@ -122,6 +123,11 @@ static float defaultStep= 1.0;
 }
 
 #pragma mark - Custom getters & setters
+
+-(void)setFrame:(CGRect)frame{
+    [super setFrame:frame];
+    [self setupWithInitialValue:defaultMinValue minValue:defaultMinValue maxValue:defaultMaxValue step:defaultStep isVertical:defaultOrientationIsVertical delegate:nil];
+}
 
 -(float)getValue{
     return currentValue;
