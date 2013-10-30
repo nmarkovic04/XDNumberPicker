@@ -14,6 +14,7 @@ static float defaultStep= 1.0;
 static BOOL defaultOrientationIsVertical= NO;
 @implementation XDNumberPicker{
     float currentValue;
+    CGPoint controlRects[3];
 }
 
 - (id)initWithFrame:(CGRect)frame{
@@ -25,6 +26,7 @@ static BOOL defaultOrientationIsVertical= NO;
 {
     self = [super initWithFrame:frame];
     if (self) {
+
         [self setupWithInitialValue:initialValue minValue:minValue maxValue:maxValue step:step isVertical:isVertical delegate:delegate];
     }
     return self;
@@ -49,6 +51,12 @@ static BOOL defaultOrientationIsVertical= NO;
     self.imageMinusPressed= [UIImage imageNamed:@"minus"];
     self.imagePlus= [UIImage imageNamed:@"plus"];
     self.imagePlusPressed= [UIImage imageNamed:@"plus"];
+    
+    if(self.isVertical){
+        self.controlOrder= @"PVM";
+    }else{
+        self.controlOrder= @"MVP";
+    }
     
     /* UI */
     float dim= self.isVertical ? self.bounds.size.width : self.bounds.size.height;
@@ -155,5 +163,57 @@ static BOOL defaultOrientationIsVertical= NO;
 
 -(void)setImage:(UIImage*)img forButton:(UIButton*)btn state:(UIControlState)state{
     [btn setImage:img forState:state];
+}
+
+#pragma mark - control order
+
+-(void)layoutControls{
+    CGPoint offset= CGPointMake(0, 0);
+    for(int i=0; i<self.controlOrder.length; i++){
+        UIView* view= [self viewForSign:[self.controlOrder characterAtIndex:i]];
+        CGRect frm= view.frame;
+        frm.origin= offset;
+        view.frame= frm;
+        [self addOffset:&offset view:view];
+    }
+}
+
+-(void)setControlOrder:(NSString *)co_{
+    NSString* controlOrder= [co_ uppercaseString];
+    NSString* regexString= @"^(?=[MVP]{3}$)(?!.*(.).*\\1).*$";
+
+    NSError *error = NULL;
+    
+    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:regexString options:NSRegularExpressionCaseInsensitive error:&error];
+    NSTextCheckingResult *match = [regex firstMatchInString:controlOrder
+                                                    options:0
+                                                      range:NSMakeRange(0, [controlOrder length])];
+   
+    if(!match)
+        return;
+    
+    _controlOrder= controlOrder;
+    [self layoutControls];
+
+}
+
+-(void)addOffset:(CGPoint*)point view:(UIView*)view{
+    if(self.isVertical){
+        point->y+= view.frame.size.height;
+    }else{
+        point->x+= view.frame.size.width;
+    }
+}
+
+-(UIView*)viewForSign:(char)ch{
+    NSString* sign= [NSString stringWithFormat:@"%c",ch];
+    if([[sign lowercaseString] isEqualToString:@"m"])
+        return self.buttonMinus;
+    else if([[sign lowercaseString] isEqualToString:@"v"])
+        return self.labelValue;
+    else if([[sign lowercaseString] isEqualToString:@"p"])
+        return self.buttonPlus;
+    else
+        return nil;
 }
 @end
